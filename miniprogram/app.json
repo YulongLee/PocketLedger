@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/add/add",
+    "pages/ai/ai",
+    "pages/stats/stats",
+    "pages/budget/budget",
+    "pages/me/me",
+    "pages/settings/settings",
+    "pages/accounts/accounts",
+    "pages/transfer/transfer",
+    "pages/logs/logs"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "小帐同学",
+    "navigationBarBackgroundColor": "#ffffff"
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents",
+  "tabBar": {
+    "color": "#9aa6a0",
+    "selectedColor": "#35b879",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/add/add",
+        "text": "记一笔"
+      },
+      {
+        "pagePath": "pages/ai/ai",
+        "text": "AI记账"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
+    ]
+  }
+}

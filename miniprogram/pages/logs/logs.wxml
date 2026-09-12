@@ -1,0 +1,21 @@
+<view class="page">
+  <view wx:if="{{mode === 'list'}}" class="list-view">
+    <view class="header"><text class="back" bindtap="backToList">‹</text><text class="title">全部账单</text><text class="count">{{filtered.length}} 笔</text></view>
+    <view class="search"><text>⌕</text><input placeholder="搜索分类、备注或金额" value="{{query}}" bindinput="onSearch" /></view>
+    <scroll-view class="filter-scroll" scroll-x><view class="filters"><view wx:for="{{filters}}" wx:key="key" class="filter {{filter === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="chooseFilter">{{item.label}}</view></view></scroll-view>
+    <scroll-view class="records" scroll-y><view wx:if="{{filtered.length}}"><view wx:for="{{filtered}}" wx:key="id" class="record" data-id="{{item.id}}" bindtap="openDetail"><view class="record-icon">{{item.icon}}</view><view class="record-main"><text class="record-title">{{item.category}}</text><text class="record-meta">{{item.date}} {{item.time}} · {{item.account}}</text><text wx:if="{{item.note}}" class="record-note">{{item.note}}</text></view><text class="record-amount {{item.type}}">{{item.type === 'income' ? '+' : item.type === 'expense' ? '-' : ''}}¥{{item.displayAmount}}</text></view></view><view wx:else class="empty"><text class="empty-icon">🧾</text><text>还没有匹配的账单</text><text class="empty-tip">试试换个关键词或先记一笔</text></view></scroll-view>
+    <button class="add-button" bindtap="add">＋ 记一笔</button>
+  </view>
+  <view wx:elif="{{mode === 'detail'}}" class="detail-view">
+    <view class="header"><text class="back" bindtap="backToList">‹</text><text class="title">账单详情</text><text class="header-action" bindtap="startEdit">编辑</text></view>
+    <view class="detail-card"><view class="big-icon">{{selected.icon}}</view><text class="detail-category">{{selected.category}}</text><text class="detail-amount {{selected.type}}">{{selected.type === 'income' ? '+' : '-'}}¥{{selected.displayAmount}}</text><text wx:if="{{selected.note}}" class="detail-note">{{selected.note}}</text></view>
+    <view class="info-card"><view><text>时间</text><text>{{selected.date}} {{selected.time}}</text></view><view><text>类型</text><text>{{selected.type === 'income' ? '收入' : selected.type === 'transfer' ? '转账' : '支出'}}</text></view><view><text>账户</text><text>{{selected.account}}</text></view></view><button class="danger-button" bindtap="removeSelected">删除账单</button>
+  </view>
+  <view wx:else class="edit-view">
+    <view class="header"><text class="back" bindtap="cancelEdit">‹</text><text class="title">编辑账单</text><text class="header-action" bindtap="saveEdit">保存</text></view>
+    <view class="type-tabs"><text class="{{edit.type === 'expense' ? 'active' : ''}}" data-type="expense" bindtap="editType">支出</text><text class="{{edit.type === 'income' ? 'active' : ''}}" data-type="income" bindtap="editType">收入</text><text class="{{edit.type === 'transfer' ? 'active' : ''}}" data-type="transfer" bindtap="editType">转账</text></view>
+    <view class="amount-input"><text>¥</text><input type="digit" value="{{edit.amount}}" data-field="amount" bindinput="editInput" /></view>
+    <view class="category-picker"><text class="label">分类</text><scroll-view scroll-x><view class="category-row"><view wx:for="{{categories}}" wx:key="name" class="category {{edit.category === item.name ? 'selected' : ''}}" data-name="{{item.name}}" bindtap="editCategory"><text>{{item.icon}}</text><text>{{item.name}}</text></view></view></scroll-view></view>
+    <view class="form-card"><view><text>备注</text><input placeholder="添加备注" value="{{edit.note}}" data-field="note" bindinput="editInput" /></view><view><text>日期</text><picker mode="date" value="{{edit.date}}" bindchange="editDate"><text>{{edit.date}} ›</text></picker></view><view><text>时间</text><input value="{{edit.time}}" data-field="time" bindinput="editInput" /></view></view><button class="save-button" bindtap="saveEdit">保存修改</button>
+  </view>
+</view>

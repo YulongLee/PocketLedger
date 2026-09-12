@@ -1,0 +1,8 @@
+schema: spec-driven
+
+context: |
+  Product: 小帐同学 PocketLedger, an AI-assisted personal bookkeeping WeChat Mini Program.
+  Current client: WeChat Mini Program with TypeScript, WXML, and WXSS under miniprogram/.
+  V1 goals: home overview, manual bookkeeping, AI text bookkeeping, bill management, statistics, monthly budget, and profile/settings.
+  Design language: soft mint-green background, white rounded cards, green accent buttons, friendly mascot illustration, compact mobile-first layout.
+  Data rule: deterministic validation and calculations own money, dates, budgets, and persistence; AI may interpret and explain but must not write unvalidated records directly.

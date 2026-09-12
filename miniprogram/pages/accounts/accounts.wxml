@@ -1,0 +1,9 @@
+<view class="page">
+  <view class="header"><view><text class="eyebrow">我的资产</text><text class="title">资产账户</text></view><view class="header-actions"><button bindtap="transfer">转账</button><text bindtap="showAdd">＋</text></view></view>
+  <view class="summary"><text>账户总余额</text><text class="total">¥ {{accounts.length ? total : '0.00'}}</text><text class="hint">管理你的微信、支付宝和银行卡</text></view>
+  <view class="section-title"><text>全部账户</text><text class="muted">{{accounts.length}} 个账户</text></view>
+  <view class="account-card" wx:for="{{accounts}}" wx:key="id"><view class="account-icon">{{item.icon}}</view><view class="account-info"><text class="account-name">{{item.name}}</text><text class="account-type">{{item.type==='wechat'?'微信':item.type==='alipay'?'支付宝':item.type==='bank'?'银行卡':item.type==='cash'?'现金':'自定义账户'}}</text></view><text class="account-balance">¥ {{item.displayBalance}}</text></view>
+  <button class="add-account" bindtap="showAdd">＋ 添加账户</button>
+  <view class="tip">转账会同步更新转出和转入账户余额，账单记录可在“全部流水”中查看。</view>
+  <view wx:if="{{showAdd}}" class="mask" bindtap="closeAdd"><view class="sheet" catchtap="noop"><view class="sheet-title">添加资产账户 <text bindtap="closeAdd">×</text></view><input class="name-input" placeholder="账户名称，如：招商银行" value="{{name}}" bindinput="inputName"/><text class="label">账户类型</text><view class="types"><view wx:for="{{types}}" wx:key="key" class="type {{type===item.key?'selected':''}}" data-type="{{item.key}}" bindtap="selectType"><text>{{item.icon}}</text><text>{{item.label}}</text></view></view><text class="label">初始余额</text><view class="balance-input"><text>¥</text><input type="digit" placeholder="0.00" value="{{openingBalance}}" bindinput="inputBalance"/></view><button class="confirm" bindtap="create">保存账户</button></view></view>
+</view>

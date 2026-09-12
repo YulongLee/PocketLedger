@@ -1,0 +1,1 @@
+Page({data:{items:[{name:'餐饮',icon:'🍜',used:'560',total:'800',percent:70},{name:'购物',icon:'🛍️',used:'420',total:'600',percent:70},{name:'交通',icon:'🚗',used:'120',total:'300',percent:40},{name:'日用',icon:'🧴',used:'210',total:'300',percent:70},{name:'娱乐',icon:'🎮',used:'180',total:'300',percent:60}]}})

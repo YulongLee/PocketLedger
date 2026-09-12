@@ -1,0 +1,1 @@
+Page({clear(){wx.showModal({title:'清空全部账单？',content:'此操作不可恢复',success:r=>{if(r.confirm){wx.setStorageSync('records',[]);wx.showToast({title:'已清空'})}}})},export(){const rs=wx.getStorageSync('records')||[];wx.setClipboardData({data:JSON.stringify(rs),success:()=>wx.showToast({title:'已复制数据'})})},accounts(){wx.navigateTo({url:'/pages/accounts/accounts'})}})
