@@ -1,3 +1,3 @@
-export const API_BASE_URL = 'http://localhost:8000/api/v1'
+export const API_BASE_URL = 'http://124.223.104.160:8000/api/v1'
 export function request<T>(path:string, method:'GET'|'POST'|'PATCH'|'DELETE'='GET', data?:any):Promise<T>{return new Promise((resolve,reject)=>{wx.request({url:`${API_BASE_URL}${path}`,method: method as any,data,timeout:8000,success:res=>{if(res.statusCode>=200&&res.statusCode<300)resolve(res.data as T);else reject(new Error(`请求失败 ${res.statusCode}`))},fail:reject})})}
 export const api={health:()=>request<{status:string}>('/health'),transactions:(params?:any)=>request<any>('/transactions','GET',params),createTransaction:(data:any)=>request<any>('/transactions','POST',data),statistics:(params?:any)=>request<any>('/statistics','GET',params),budgets:(params?:any)=>request<any>('/budgets','GET',params),createBudget:(data:any)=>request<any>('/budgets','POST',data)}
