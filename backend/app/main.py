@@ -24,6 +24,9 @@ class TransactionRow(Base):
     category_id: Mapped[str|None] = mapped_column(String(64), nullable=True); account_id: Mapped[str|None] = mapped_column(String(64), nullable=True)
     to_account_id: Mapped[str|None] = mapped_column(String(64), nullable=True); title: Mapped[str] = mapped_column(String(200), default=''); note: Mapped[str] = mapped_column(String(500), default='')
     occurred_at: Mapped[datetime] = mapped_column(DateTime); source: Mapped[str] = mapped_column(String(16), default='manual'); idempotency_key: Mapped[str] = mapped_column(String(128), unique=True); version: Mapped[int] = mapped_column(default=1)
+class AccountRow(Base):
+    __tablename__='accounts'
+    id: Mapped[str] = mapped_column(String(64), primary_key=True); user_id: Mapped[str] = mapped_column(String(64), default='demo', index=True); ledger_id: Mapped[str] = mapped_column(String(64), default='default'); type: Mapped[str] = mapped_column(String(32)); name: Mapped[str] = mapped_column(String(100)); opening_balance: Mapped[Decimal] = mapped_column(Numeric(18,2), default=0); is_default: Mapped[bool] = mapped_column(default=False); is_archived: Mapped[bool] = mapped_column(default=False)
 class BudgetRow(Base):
     __tablename__='budgets'
     id: Mapped[str] = mapped_column(String(64), primary_key=True); user_id: Mapped[str] = mapped_column(String(64), default='demo', index=True); ledger_id: Mapped[str] = mapped_column(String(64), default='default'); month: Mapped[str] = mapped_column(String(7)); category_id: Mapped[str|None] = mapped_column(String(64), nullable=True); amount: Mapped[Decimal] = mapped_column(Numeric(18,2))
@@ -32,7 +35,7 @@ Base.metadata.create_all(engine)
 if DB_URL.startswith('sqlite'):
     from sqlalchemy import text
     with engine.begin() as c:
-        for table in ('transactions','budgets'):
+        for table in ('transactions','budgets','accounts'):
             cols=[r[1] for r in c.execute(text(f'PRAGMA table_info({table})'))]
             if 'user_id' not in cols: c.execute(text(f"ALTER TABLE {table} ADD COLUMN user_id VARCHAR(64) DEFAULT 'demo'"))
 app = FastAPI(title='小帐同学 PocketLedger API', version='0.2.0')
@@ -40,6 +43,8 @@ class TransactionIn(BaseModel):
     ledger_id: str='default'; type: Literal['expense','income','transfer']; amount: Decimal=Field(gt=0); category_id:str|None=None; account_id:str|None=None; to_account_id:str|None=None; title:str=''; note:str=''; occurred_at:datetime; source:Literal['manual','ai','image','import','recurring']='manual'; idempotency_key:str
 class AIParseIn(BaseModel): text:str=Field(min_length=1,max_length=2000)
 class AIConfirmIn(BaseModel): transactions:list[TransactionIn]
+class AccountIn(BaseModel):
+    ledger_id:str='default'; type:str='custom'; name:str; opening_balance:Decimal=Field(default=Decimal('0'), ge=0)
 class BudgetIn(BaseModel): ledger_id:str='default'; month:str; category_id:str|None=None; amount:Decimal=Field(gt=0)
 AUTH_SECRET=os.getenv('AUTH_SECRET','change-me-before-production')
 def issue_token(user_id:str):
@@ -73,6 +78,28 @@ async def wechat_login(body: WechatLoginIn):
         raise HTTPException(401, '微信登录校验失败')
     openid=data['openid']; user_id=hashlib.sha256(f'{appid}:{openid}'.encode()).hexdigest()[:32]
     return {'access_token':issue_token(user_id), 'token_type':'bearer', 'user_id':user_id, 'expires_in':60*60*24*30}
+
+@app.get('/api/v1/accounts')
+def list_accounts(ledger_id='default', authorization: str|None = Header(None)):
+    uid=current_user(authorization)
+    with Session(engine) as s:
+        accounts=list(s.scalars(select(AccountRow).where(AccountRow.user_id==uid,AccountRow.ledger_id==ledger_id,AccountRow.is_archived==False)))
+        txs=list(s.scalars(select(TransactionRow).where(TransactionRow.user_id==uid,TransactionRow.ledger_id==ledger_id)))
+    out=[]
+    for a in accounts:
+        balance=Decimal(a.opening_balance)
+        for t in txs:
+            if t.type=='income' and t.account_id==a.id: balance+=Decimal(t.amount)
+            elif t.type=='expense' and t.account_id==a.id: balance-=Decimal(t.amount)
+            elif t.type=='transfer':
+                if t.account_id==a.id: balance-=Decimal(t.amount)
+                if t.to_account_id==a.id: balance+=Decimal(t.amount)
+        out.append({'id':a.id,'ledger_id':a.ledger_id,'type':a.type,'name':a.name,'opening_balance':str(a.opening_balance),'balance':str(balance),'is_default':a.is_default})
+    return {'items':out}
+@app.post('/api/v1/accounts',status_code=201)
+def create_account(body:AccountIn, authorization: str|None = Header(None)):
+    with Session(engine) as s:
+        a=AccountRow(id=str(uuid4()),user_id=current_user(authorization),**body.model_dump()); s.add(a); s.commit(); s.refresh(a); return {'id':a.id,'ledger_id':a.ledger_id,'type':a.type,'name':a.name,'opening_balance':str(a.opening_balance),'balance':str(a.opening_balance),'is_default':a.is_default}
 
 @app.get('/api/v1/me/export')
 def export_data(authorization: str|None = Header(None)):
