@@ -135,6 +135,8 @@ def list_transactions(ledger_id='default',month:str|None=None,type:str|None=None
     rows=[r for r in rows if (not month or r.occurred_at.isoformat().startswith(month)) and (not type or r.type==type)]
     return {'items':[tx_dict(r) for r in rows],'next_cursor':None}
 def create_transaction(body:TransactionIn, uid='demo'):
+    if body.type=='transfer' and (not body.account_id or not body.to_account_id or body.account_id==body.to_account_id):
+        raise HTTPException(400, '转账账户无效')
     with Session(engine) as s:
         existing=s.scalar(select(TransactionRow).where(TransactionRow.user_id==uid,TransactionRow.idempotency_key==body.idempotency_key))
         if existing:return tx_dict(existing)
