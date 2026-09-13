@@ -10,6 +10,6 @@ Page({
   inputName(e:any){this.setData({name:e.detail.value})},
   inputBalance(e:any){this.setData({openingBalance:e.detail.value})},
   selectType(e:any){this.setData({type:e.currentTarget.dataset.type})},
-  create(){if(!this.data.name.trim()){wx.showToast({title:'请输入账户名称',icon:'none'});return} try{api.createAccount({name:this.data.name,type:this.data.type,opening_balance:Number(this.data.openingBalance||0)}).then(()=>{wx.showToast({title:'账户已添加'});this.setData({showAdd:false});this.load()}).catch(()=>wx.showToast({title:'保存失败',icon:'none'}));return;wx.showToast({title:'账户已添加'});this.setData({showAdd:false});this.load()}catch(err:any){wx.showToast({title:err.message||'余额格式不正确',icon:'none'})}},
+  async create(){if(!this.data.name.trim()){wx.showToast({title:'请输入账户名称',icon:'none'});return} const opening=Number(this.data.openingBalance||0); if(!Number.isFinite(opening)||opening<0){wx.showToast({title:'余额格式不正确',icon:'none'});return} try{await api.createAccount({name:this.data.name.trim(),type:this.data.type,opening_balance:opening});wx.showToast({title:'账户已添加'});this.setData({showAdd:false});this.load()}catch(err:any){wx.showToast({title:err.message||'保存失败，请重试',icon:'none'})}},
   transfer(){wx.navigateTo({url:'/pages/transfer/transfer'})}
 })
