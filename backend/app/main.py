@@ -53,11 +53,11 @@ def current_user(authorization: str|None):
     if token=='demo' or token=='test-user': return token
     try:
         raw,sig=token.split('.',1); expected=base64.urlsafe_b64encode(hmac.new(AUTH_SECRET.encode(),raw.encode(),hashlib.sha256).digest()).decode().rstrip('=')
-        if not hmac.compare_digest(sig,expected): return 'demo'
+        if not hmac.compare_digest(sig,expected): raise HTTPException(401, '登录凭证无效')
         payload=json.loads(base64.urlsafe_b64decode(raw+'='*((4-len(raw)%4)%4)))
-        if int(payload.get('exp',0))<int(time.time()): return 'demo'
+        if int(payload.get('exp',0))<int(time.time()): raise HTTPException(401, '登录凭证已过期')
         return str(payload['sub'])
-    except Exception: return 'demo'
+    except Exception: raise HTTPException(401, '登录凭证无效')
 def tx_dict(r): return {'id':r.id,'user_id':r.user_id,'ledger_id':r.ledger_id,'type':r.type,'amount':str(r.amount),'category_id':r.category_id,'account_id':r.account_id,'to_account_id':r.to_account_id,'title':r.title,'note':r.note,'occurred_at':r.occurred_at.isoformat(),'source':r.source,'idempotency_key':r.idempotency_key,'version':r.version}
 class WechatLoginIn(BaseModel): code: str = Field(min_length=1, max_length=256)
 
