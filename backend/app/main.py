@@ -8,7 +8,7 @@ import httpx
 import base64, json, hmac, time
 from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, String, DateTime, Numeric, select
+from sqlalchemy import create_engine, String, DateTime, Numeric, select, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from .ai import parse_text
 
@@ -120,7 +120,12 @@ def delete_data(authorization: str|None = Header(None)):
     return {'ok':True}
 
 @app.get('/api/v1/health')
-def health(): return {'status':'ok','service':'pocketledger','storage':'database'}
+def health():
+    try:
+        with engine.connect() as c: c.execute(text('SELECT 1'))
+        return {'status':'ok','service':'pocketledger','storage':'postgresql'}
+    except Exception:
+        raise HTTPException(503, '数据库不可用')
 @app.post('/api/v1/ai/parse-transaction')
 async def ai_parse_transaction(body:AIParseIn, authorization: str|None = Header(None)):
     drafts,provider=await parse_text(body.text); return {'transactions':drafts,'provider':provider,'requires_confirmation':True}
