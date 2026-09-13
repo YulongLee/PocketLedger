@@ -1,18 +1,9 @@
-// app.ts
+import { api } from './services/api'
 App<IAppOption>({
-  globalData: {},
+  globalData: { accessToken: '' },
   onLaunch() {
-    // 展示本地存储能力
-    const logs = wx.getStorageSync('logs') || []
-    logs.unshift(Date.now())
-    wx.setStorageSync('logs', logs)
-
-    // 登录
-    wx.login({
-      success: res => {
-        console.log(res.code)
-        // 发送 res.code 到后台换取 openId, sessionKey, unionId
-      },
-    })
+    const token = wx.getStorageSync('access_token') || ''
+    this.globalData.accessToken = token
+    wx.login({ success: res => { if (!res.code) return; api.login(res.code).then((data:any) => { if (data.access_token) { wx.setStorageSync('access_token', data.access_token); this.globalData.accessToken = data.access_token } }).catch(() => { /* 未配置 AppID 时保持游客模式 */ }) } })
   },
 })
