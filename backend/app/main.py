@@ -3,6 +3,8 @@ from decimal import Decimal
 from typing import Literal
 from uuid import uuid4
 import os
+import hashlib
+import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, String, DateTime, Numeric, select
@@ -31,6 +33,21 @@ class AIParseIn(BaseModel): text:str=Field(min_length=1,max_length=2000)
 class AIConfirmIn(BaseModel): transactions:list[TransactionIn]
 class BudgetIn(BaseModel): ledger_id:str='default'; month:str; category_id:str|None=None; amount:Decimal=Field(gt=0)
 def tx_dict(r): return {'id':r.id,'ledger_id':r.ledger_id,'type':r.type,'amount':str(r.amount),'category_id':r.category_id,'account_id':r.account_id,'to_account_id':r.to_account_id,'title':r.title,'note':r.note,'occurred_at':r.occurred_at.isoformat(),'source':r.source,'idempotency_key':r.idempotency_key,'version':r.version}
+class WechatLoginIn(BaseModel): code: str = Field(min_length=1, max_length=256)
+
+@app.post('/api/v1/auth/wechat-login')
+async def wechat_login(body: WechatLoginIn):
+    appid=os.getenv('WECHAT_APPID'); secret=os.getenv('WECHAT_APP_SECRET')
+    if not appid or not secret:
+        raise HTTPException(503, '微信登录尚未配置 AppID/AppSecret')
+    async with httpx.AsyncClient(timeout=8) as client:
+        r=await client.get('https://api.weixin.qq.com/sns/jscode2session', params={'appid':appid,'secret':secret,'js_code':body.code,'grant_type':'authorization_code'})
+    data=r.json()
+    if data.get('errcode') or not data.get('openid'):
+        raise HTTPException(401, '微信登录校验失败')
+    openid=data['openid']; user_id=hashlib.sha256(f'{appid}:{openid}'.encode()).hexdigest()[:32]
+    return {'access_token':user_id, 'token_type':'bearer', 'user_id':user_id}
+
 @app.get('/api/v1/health')
 def health(): return {'status':'ok','service':'pocketledger','storage':'database'}
 @app.post('/api/v1/ai/parse-transaction')
