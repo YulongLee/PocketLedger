@@ -1,1 +1,339 @@
-<view class="prototype-page"><image class="prototype-image" src="/assets/home-reference.png" mode="widthFix"/><view class="hotspot add" bindtap="add"></view><view class="hotspot ledger" bindtap="viewAll"></view><view class="hotspot stats" bindtap="goStats"></view><view class="hotspot me" bindtap="goMe"></view></view>
+<view class="page">
+  <!-- 顶部 Hero -->
+  <view class="hero">
+    <view class="hero-top">
+      <view>
+        <view class="brand">小账同学</view>
+        <view class="brand-sub">记好每一笔，遇见更好的自己</view>
+      </view>
+
+      <view class="hero-actions">
+        <view class="round-btn">⌕</view>
+        <view class="round-btn notification">
+          ♧
+          <view class="notification-dot"></view>
+        </view>
+      </view>
+    </view>
+
+    <view class="greeting">
+      <view class="greeting-text">
+        <view class="greeting-title">早上好，{{userName}}同学 ☀️</view>
+        <view class="greeting-sub">
+          好的财务习惯，<br />
+          会让生活更轻松～
+        </view>
+      </view>
+
+      <image
+        class="mascot"
+        src="/assets/mascot-avatar.png"
+        mode="aspectFit"
+      />
+    </view>
+  </view>
+
+  <!-- 本月收支 -->
+  <view class="card summary-card">
+    <view class="section-header">
+      <view class="section-title">本月收支</view>
+      <view class="month-selector">
+        {{currentMonth}}⌄
+      </view>
+    </view>
+
+    <view class="summary-grid">
+      <view class="summary-item">
+        <view class="summary-label">支出</view>
+        <view class="summary-value">
+          ¥ {{summary.expense}}
+        </view>
+        <view class="summary-change decrease">
+          较上月 ↓ {{summary.expenseChange}}%
+        </view>
+      </view>
+
+      <view class="summary-divider"></view>
+
+      <view class="summary-item">
+        <view class="summary-label">收入</view>
+        <view class="summary-value">
+          ¥ {{summary.income}}
+        </view>
+        <view class="summary-change increase">
+          较上月 ↑ {{summary.incomeChange}}%
+        </view>
+      </view>
+
+      <view class="summary-divider"></view>
+
+      <view class="summary-item">
+        <view class="summary-label">结余</view>
+        <view class="summary-value">
+          ¥ {{summary.balance}}
+        </view>
+        <view class="summary-change muted">
+          收支平衡 {{summary.balanceRate}}%
+        </view>
+      </view>
+    </view>
+
+    <!-- 月度预算 -->
+    <view class="budget-row">
+      <view class="budget-icon">¥</view>
+
+      <view class="budget-content">
+        <view class="budget-info">
+          <text>月度预算</text>
+          <text class="budget-amount">
+            ¥ {{budget.total}}
+          </text>
+          <text class="budget-used">
+            已使用 {{budget.percent}}%
+          </text>
+        </view>
+
+        <view class="progress">
+          <view
+            class="progress-value"
+            style="width: {{budget.percent}}%;"
+          ></view>
+        </view>
+      </view>
+
+      <view class="arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 记账入口 -->
+  <view class="quick-entry card">
+    <view class="quick-main" bindtap="add">
+      <view class="quick-plus">＋</view>
+      <view>记一笔</view>
+    </view>
+
+    <view
+      class="quick-item"
+      bindtap="add"
+    >
+      <view class="quick-icon yellow">⚡</view>
+      <view class="quick-label">快速记账</view>
+    </view>
+
+    <view
+      class="quick-item"
+      bindtap="openAI"
+    >
+      <view class="quick-icon purple">AI</view>
+      <view class="quick-label">AI记账</view>
+    </view>
+
+    <view
+      class="quick-item"
+      bindtap="openPhoto"
+    >
+      <view class="quick-icon blue">▣</view>
+      <view class="quick-label">拍照记账</view>
+    </view>
+
+    <view
+      class="quick-item"
+      bindtap="openVoice"
+    >
+      <view class="quick-icon red">●</view>
+      <view class="quick-label">语音记账</view>
+    </view>
+  </view>
+
+  <!-- 消费趋势 -->
+  <view class="card trend-card">
+    <view class="section-header">
+      <view>
+        <view class="section-title">本月消费趋势</view>
+
+        <view class="trend-change">
+          <text class="decrease">↓ 12%</text>
+          <text class="muted"> 较上月</text>
+        </view>
+      </view>
+
+      <view class="period-tabs">
+        <view class="period-tab">周</view>
+        <view class="period-tab active">月</view>
+        <view class="period-tab">年</view>
+      </view>
+    </view>
+
+    <!-- 可以后续换成 ECharts -->
+    <view class="chart">
+      <view
+        wx:for="{{trend}}"
+        wx:key="date"
+        class="chart-column"
+      >
+        <view
+          class="bar {{item.selected ? 'selected' : ''}}"
+          style="height: {{item.height}}rpx;"
+        ></view>
+      </view>
+    </view>
+
+    <view class="chart-labels">
+      <text>9.1</text>
+      <text>9.5</text>
+      <text>9.10</text>
+      <text>9.15</text>
+      <text>9.20</text>
+      <text>9.25</text>
+      <text>9.30</text>
+    </view>
+  </view>
+
+  <!-- 钱花哪了 -->
+  <view class="card category-card">
+    <view class="section-header">
+      <view class="section-title">钱花哪了</view>
+      <view class="arrow">›</view>
+    </view>
+
+    <view class="category-grid">
+      <view
+        wx:for="{{categories}}"
+        wx:key="name"
+        class="category-item"
+      >
+        <view
+          class="category-icon"
+          style="background: {{item.bg}};"
+        >
+          {{item.icon}}
+        </view>
+
+        <view class="category-name">
+          {{item.name}}
+        </view>
+
+        <view class="category-amount">
+          ¥ {{item.amount}}
+        </view>
+
+        <view class="category-percent">
+          {{item.percent}}%
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最近账单 -->
+  <view class="card recent-card">
+    <view class="section-header">
+      <view class="section-title">最近账单</view>
+
+      <view
+        class="view-all"
+        bindtap="viewAll"
+      >
+        查看全部 ›
+      </view>
+    </view>
+
+    <view
+      wx:for="{{recentTransactions}}"
+      wx:key="id"
+      class="transaction"
+      bindtap="openTx"
+      data-id="{{item.id}}"
+    >
+      <view
+        class="transaction-icon"
+        style="background: {{item.bg}};"
+      >
+        {{item.icon}}
+      </view>
+
+      <view class="transaction-main">
+        <view class="transaction-title">
+          {{item.title}}
+        </view>
+
+        <view class="transaction-meta">
+          {{item.time}} · {{item.account}}
+        </view>
+      </view>
+
+      <view
+        class="transaction-amount {{item.type}}"
+      >
+        {{item.type === 'income' ? '+' : '-'}}
+        ¥ {{item.amount}}
+      </view>
+    </view>
+  </view>
+
+  <!-- AI 洞察 -->
+  <view
+    class="ai-card"
+    bindtap="openAI"
+  >
+    <image
+      class="ai-avatar"
+      src="/assets/mascot-avatar.png"
+      mode="aspectFit"
+    />
+
+    <view class="ai-content">
+      <view class="ai-title">
+        💡 小账同学发现
+      </view>
+
+      <view class="ai-text">
+        你这个月餐饮支出比上个月同期多了 ¥126，
+        建议适当控制外食，试试自己做饭吧！
+      </view>
+    </view>
+
+    <view class="arrow">›</view>
+  </view>
+
+  <!-- 给 TabBar 留空间 -->
+  <view class="bottom-space"></view>
+
+  <!-- 自定义 TabBar -->
+  <view class="tabbar">
+    <view class="tab active">
+      <view class="tab-icon">⌂</view>
+      <view>首页</view>
+    </view>
+
+    <view
+      class="tab"
+      bindtap="viewAll"
+    >
+      <view class="tab-icon">▤</view>
+      <view>账单</view>
+    </view>
+
+    <view
+      class="fab"
+      bindtap="add"
+    >
+      ＋
+    </view>
+
+    <view
+      class="tab"
+      bindtap="goStats"
+    >
+      <view class="tab-icon">▥</view>
+      <view>统计</view>
+    </view>
+
+    <view
+      class="tab"
+      bindtap="goMe"
+    >
+      <view class="tab-icon">♙</view>
+      <view>我的</view>
+    </view>
+  </view>
+</view>
