@@ -1,3 +1,4 @@
+import { api } from '../../services/api'
 type Tx = {
   id: string
   amount: number
@@ -35,7 +36,7 @@ Page({
     categories: Object.keys(categoryIcons).map(name => ({ name, icon: categoryIcons[name] })),
   },
   onShow() { this.load() },
-  load() { const records = allTransactions(); this.setData({ records }, () => this.applyFilter()) },
+  async load() { try { const res:any = await api.transactions(); const records=(res.items||[]).map(normalize).sort((a:Tx,b:Tx)=>`${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)); this.setData({ records }, () => this.applyFilter()) } catch(e) { const records = allTransactions(); this.setData({ records }, () => this.applyFilter()) } },
   applyFilter() { const q = String(this.data.query || '').trim().toLowerCase(); const filter = this.data.filter; const filtered = this.data.records.filter((r: Tx) => (filter === 'all' || r.type === filter) && (!q || `${r.category} ${r.note} ${r.amount} ${r.date}`.toLowerCase().includes(q))); this.setData({ filtered }) },
   onSearch(e: any) { this.setData({ query: e.detail.value }, () => this.applyFilter()) },
   chooseFilter(e: any) { this.setData({ filter: e.currentTarget.dataset.key }, () => this.applyFilter()) },
@@ -49,10 +50,7 @@ Page({
   saveEdit() {
     const tx = this.data.selected as Tx; const edit = this.data.edit; const amount = Number(edit.amount)
     if (!tx || !amount || amount < 0) { wx.showToast({ title: '请输入有效金额', icon: 'none' }); return }
-    const records = (wx.getStorageSync('records') || []).map((raw: any, i: number) => String(raw.id || `${String(raw.date || '').slice(0, 10)}-${i}`) === tx.id ? { ...raw, amount, type: edit.type, category: edit.category, icon: categoryIcons[edit.category] || tx.icon, note: edit.note, date: edit.date, time: edit.time } : raw)
-    wx.setStorageSync('records', records)
-    const updated = normalize({ ...tx, ...edit, amount }, 0)
-    this.setData({ selected: updated, mode: 'detail' }, () => this.load()); wx.showToast({ title: '已保存' })
+    api.updateTransaction(tx.id, {type: edit.type, amount, category_id: edit.category, title: edit.category, note: edit.note, occurred_at: `${edit.date}T${edit.time || '12:30'}:00`, source: 'manual', idempotency_key: `edit-${tx.id}`}).then(()=>{ const updated = normalize({ ...tx, ...edit, amount }, 0); this.setData({ selected: updated, mode: 'detail' }, () => this.load()); wx.showToast({ title: '已保存' }) }).catch(()=>wx.showToast({title:'保存失败，请重试',icon:'none'}))
   },
   removeSelected() {
     const tx = this.data.selected as Tx; if (!tx) return
