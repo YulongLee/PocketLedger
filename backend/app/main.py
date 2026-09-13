@@ -114,8 +114,17 @@ def statistics(ledger_id='default',month:str|None=None, authorization: str|None 
     items=list_transactions(ledger_id,month,authorization=authorization)['items']; expense=sum(Decimal(x['amount']) for x in items if x['type']=='expense'); income=sum(Decimal(x['amount']) for x in items if x['type']=='income'); return {'expense':str(expense),'income':str(income),'balance':str(income-expense),'count':len(items)}
 @app.get('/api/v1/budgets')
 def list_budgets(ledger_id='default',month:str|None=None, authorization: str|None = Header(None)):
-    with Session(engine) as s: rows=list(s.scalars(select(BudgetRow).where(BudgetRow.user_id==current_user(authorization),BudgetRow.ledger_id==ledger_id)))
-    return {'items':[{'id':r.id,'ledger_id':r.ledger_id,'month':r.month,'category_id':r.category_id,'amount':str(r.amount)} for r in rows if not month or r.month==month]}
+    uid=current_user(authorization)
+    with Session(engine) as s:
+        rows=list(s.scalars(select(BudgetRow).where(BudgetRow.user_id==uid,BudgetRow.ledger_id==ledger_id)))
+        txs=list(s.scalars(select(TransactionRow).where(TransactionRow.user_id==uid,TransactionRow.ledger_id==ledger_id,TransactionRow.type=='expense')))
+    items=[]
+    for r in rows:
+        if month and r.month!=month: continue
+        used=sum((Decimal(t.amount) for t in txs if t.occurred_at.isoformat().startswith(r.month) and (not r.category_id or t.category_id==r.category_id)),Decimal('0'))
+        total=Decimal(r.amount)
+        items.append({'id':r.id,'ledger_id':r.ledger_id,'month':r.month,'category_id':r.category_id,'amount':str(total),'used':str(used),'percent':min(100,round(float(used/total*100))) if total else 0})
+    return {'items':items}
 @app.post('/api/v1/budgets',status_code=201)
 def create_budget(body:BudgetIn, authorization: str|None = Header(None)):
     with Session(engine) as s:
