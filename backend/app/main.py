@@ -126,6 +126,9 @@ def health():
         return {'status':'ok','service':'pocketledger','storage':'postgresql'}
     except Exception:
         raise HTTPException(503, '数据库不可用')
+@app.get('/health')
+def root_health():
+    return health()
 @app.post('/api/v1/ai/parse-transaction')
 async def ai_parse_transaction(body:AIParseIn, authorization: str|None = Header(None)):
     drafts,provider=await parse_text(body.text); return {'transactions':drafts,'provider':provider,'requires_confirmation':True}
