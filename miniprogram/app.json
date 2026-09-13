@@ -18,6 +18,7 @@
     "navigationBarBackgroundColor": "#ffffff"
   },
   "style": "v2",
+  "__usePrivacyCheck__": true,
   "componentFramework": "glass-easel",
   "lazyCodeLoading": "requiredComponents",
   "tabBar": {
