@@ -16,7 +16,7 @@
 - 腾讯云轻量服务器防火墙放行 TCP 80、443
 - 微信公众平台配置 `api.pocketledger.cn` 为 request 合法域名
 - 完成小程序备案和隐私政策发布
-- 配置小程序 AppSecret 到服务器 `/srv/apps/pocketledger/.env`
+- 小程序 AppID/AppSecret 已配置到服务器 `/srv/apps/pocketledger/.env`（权限 600）
 
 ## 配置示例
 
@@ -37,3 +37,7 @@ DATABASE_URL=postgresql+psycopg://...
 3. 使用两个微信账号验证流水和预算互不可见。
 4. 验证账号注销、数据导出和数据删除。
 5. 提交小程序审核前，确认隐私协议、用户协议和备案信息一致。
+
+## 当前状态
+
+代码已与 GitHub `main` 分支同步。服务器本机健康检查、PostgreSQL 持久化、服务自启动和备份定时任务均正常。剩余验收项只依赖微信开发者工具/公众平台操作：真实 `wx.login` 联调、合法域名校验、双账号隔离验证，以及备案和隐私协议发布。
