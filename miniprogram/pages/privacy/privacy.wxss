@@ -1,0 +1,1 @@
+.page{box-sizing:border-box;min-height:100vh;padding:42rpx 36rpx;background:#f5fbf7;color:#24342b}.title{font-size:42rpx;font-weight:700}.updated{margin-top:14rpx;color:#8a9b91;font-size:24rpx}.heading{margin-top:42rpx;font-size:30rpx;font-weight:600}.body{margin-top:16rpx;font-size:27rpx;line-height:1.8;color:#52645a}
