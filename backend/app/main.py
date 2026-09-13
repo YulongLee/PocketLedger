@@ -108,6 +108,10 @@ def export_data(authorization: str|None = Header(None)):
         txs=list(s.scalars(select(TransactionRow).where(TransactionRow.user_id==uid)))
         bs=list(s.scalars(select(BudgetRow).where(BudgetRow.user_id==uid)))
     return {'user_id':uid,'transactions':[tx_dict(x) for x in txs],'budgets':[{'id':x.id,'month':x.month,'category_id':x.category_id,'amount':str(x.amount)} for x in bs]}
+@app.get('/api/v1/me')
+def me_profile(authorization: str|None = Header(None)):
+    uid=current_user(authorization)
+    return {'user_id':uid,'mode':'guest' if uid=='demo' else 'wechat'}
 
 @app.delete('/api/v1/me/data')
 def delete_data(authorization: str|None = Header(None)):
