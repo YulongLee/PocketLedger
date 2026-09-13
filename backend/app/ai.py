@@ -1,5 +1,5 @@
 import json, os, re
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 try:
@@ -25,4 +25,17 @@ async def parse_text(text: str) -> tuple[list[dict[str, Any]], str]:
     async with httpx.AsyncClient(timeout=20) as client:
         response=await client.post(f'{base}/chat/completions',headers={'Authorization':f'Bearer {key}','Content-Type':'application/json'},json=payload)
         response.raise_for_status(); content=response.json()['choices'][0]['message']['content']; data=json.loads(content)
-    return data.get('transactions',[]), 'dashscope'
+    rows=[]
+    forced_date = date.today() if '今天' in text else date.today()-timedelta(days=1) if '昨天' in text else None
+    for item in data.get('transactions',[]):
+        try:
+            amount=Decimal(str(item.get('amount','')))
+            if amount <= 0 or amount > Decimal('100000000'): continue
+            occurred=str(item.get('occurred_at') or '')
+            if forced_date: occurred=forced_date.isoformat()
+            elif not re.fullmatch(r'\d{4}-\d{2}-\d{2}', occurred): occurred=date.today().isoformat()
+            item={**item,'amount':str(amount.quantize(Decimal('0.01'))),'occurred_at':occurred,'confidence':max(0,min(1,float(item.get('confidence',0.5))))}
+            rows.append(item)
+        except (ValueError, TypeError, ArithmeticError):
+            continue
+    return rows, 'dashscope'
