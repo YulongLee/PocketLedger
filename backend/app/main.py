@@ -74,6 +74,24 @@ async def wechat_login(body: WechatLoginIn):
     openid=data['openid']; user_id=hashlib.sha256(f'{appid}:{openid}'.encode()).hexdigest()[:32]
     return {'access_token':issue_token(user_id), 'token_type':'bearer', 'user_id':user_id, 'expires_in':60*60*24*30}
 
+@app.get('/api/v1/me/export')
+def export_data(authorization: str|None = Header(None)):
+    uid=current_user(authorization)
+    with Session(engine) as s:
+        txs=list(s.scalars(select(TransactionRow).where(TransactionRow.user_id==uid)))
+        bs=list(s.scalars(select(BudgetRow).where(BudgetRow.user_id==uid)))
+    return {'user_id':uid,'transactions':[tx_dict(x) for x in txs],'budgets':[{'id':x.id,'month':x.month,'category_id':x.category_id,'amount':str(x.amount)} for x in bs]}
+
+@app.delete('/api/v1/me/data')
+def delete_data(authorization: str|None = Header(None)):
+    uid=current_user(authorization)
+    if uid=='demo': raise HTTPException(403,'游客模式不能删除云端数据')
+    with Session(engine) as s:
+        for r in s.scalars(select(TransactionRow).where(TransactionRow.user_id==uid)): s.delete(r)
+        for r in s.scalars(select(BudgetRow).where(BudgetRow.user_id==uid)): s.delete(r)
+        s.commit()
+    return {'ok':True}
+
 @app.get('/api/v1/health')
 def health(): return {'status':'ok','service':'pocketledger','storage':'database'}
 @app.post('/api/v1/ai/parse-transaction')
