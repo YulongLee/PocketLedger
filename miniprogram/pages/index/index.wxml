@@ -259,8 +259,6 @@
     <view class="arrow">›</view>
   </view>
 
-  <!-- 给 TabBar 留空间 -->
-  <view class="bottom-space"></view>
-
+  <!-- 给底部导航保留安全距离 -->
   <view class="bottom-space"></view>
 </view>
