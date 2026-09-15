@@ -1,1 +1,18 @@
-<view class="page"><view class="tabs"><text class="{{type==='expense'?'active':''}}" bindtap="setType" data-type="expense">支出</text><text class="{{type==='income'?'active':''}}" bindtap="setType" data-type="income">收入</text><text>转账</text></view><view class="amount"><text>¥</text><input type="digit" placeholder="0.00" value="{{amount}}" bindinput="amountInput" focus/></view><text class="account">零钱　○</text><view class="cat-grid"><view wx:for="{{categories}}" wx:key="name" class="cat {{index===index?'selected':''}}" bindtap="cat" data-index="{{index}}"><text>{{item.icon}}</text><text>{{item.name}}</text></view></view><view class="form"><view><text>备注</text><input placeholder="添加备注..." value="{{note}}" bindinput="noteInput"/></view><view><text>日期</text><text>今天　12:30 ›</text></view><view><text>支付方式</text><text>微信支付 ›</text></view></view><button bindtap="save">完成</button></view>
+<view class="sheet-page">
+  <view class="scrim" bindtap="close"></view>
+  <view class="sheet" wx:if="{{mode==='menu'}}">
+    <view class="grabber"></view>
+    <view class="sheet-head"><text class="sheet-title">记一笔</text><text class="close" bindtap="close">×</text></view>
+    <view class="option option-primary" bindtap="chooseManual"><image src="/assets/icons/quick-add-v2.png"/><view><text class="option-title">手动记账</text><text class="option-sub">快速记录一笔收支</text></view><text class="chevron">›</text></view>
+    <view class="option" bindtap="openAI"><image src="/assets/icons/ai-v2.png"/><view><text class="option-title">AI记账</text><text class="option-sub">说一句话，自动识别记账</text></view><text class="chevron">›</text></view>
+    <view class="option" bindtap="openPhoto"><image src="/assets/icons/camera-v2.png"/><view><text class="option-title">拍照记账</text><text class="option-sub">上传截图 / 小票，自动识别</text></view><text class="chevron">›</text></view>
+    <view class="option last" bindtap="openVoice"><image src="/assets/icons/voice-v2.png"/><view><text class="option-title">语音记账</text><text class="option-sub">说出来就帮你记</text></view><text class="chevron">›</text></view>
+  </view>
+  <view class="manual sheet" wx:if="{{mode==='manual'}}">
+    <view class="grabber"></view><view class="sheet-head"><text class="sheet-title">手动记账</text><text class="close" bindtap="close">×</text></view>
+    <view class="tabs"><text class="{{type==='expense'?'active':''}}" bindtap="setType" data-type="expense">支出</text><text class="{{type==='income'?'active':''}}" bindtap="setType" data-type="income">收入</text></view>
+    <view class="amount"><text>¥</text><input type="digit" placeholder="0.00" value="{{amount}}" bindinput="amountInput" focus/></view>
+    <view class="cat-grid"><view wx:for="{{categories}}" wx:key="name" class="cat {{index===selected?'selected':''}}" bindtap="cat" data-index="{{index}}"><text>{{item.icon}}</text><text>{{item.name}}</text></view></view>
+    <input class="note" placeholder="添加备注..." value="{{note}}" bindinput="noteInput"/><button bindtap="save">完成</button>
+  </view>
+</view>
