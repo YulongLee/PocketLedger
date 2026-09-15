@@ -80,7 +80,7 @@
 
     <!-- 月度预算 -->
     <view class="budget-row">
-      <view class="budget-icon">¥</view>
+      <image class="budget-icon" src="/assets/icons/budget-v2.png"/>
 
       <view class="budget-content">
         <view class="budget-info">
