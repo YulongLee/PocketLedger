@@ -116,7 +116,7 @@
       class="quick-item"
       bindtap="add"
     >
-      <image class="quick-icon" src="/assets/icons/quick-add.png"/>
+      <image class="quick-icon" src="/assets/icons/quick-add-v2.png"/>
       <view class="quick-label">快速记账</view>
     </view>
 
@@ -124,7 +124,7 @@
       class="quick-item"
       bindtap="openAI"
     >
-      <image class="quick-icon" src="/assets/icons/ai.png"/>
+      <image class="quick-icon" src="/assets/icons/ai-v2.png"/>
       <view class="quick-label">AI记账</view>
     </view>
 
@@ -132,7 +132,7 @@
       class="quick-item"
       bindtap="openPhoto"
     >
-      <image class="quick-icon" src="/assets/icons/camera.png"/>
+      <image class="quick-icon" src="/assets/icons/camera-v2.png"/>
       <view class="quick-label">拍照记账</view>
     </view>
 
@@ -140,7 +140,7 @@
       class="quick-item"
       bindtap="openVoice"
     >
-      <image class="quick-icon" src="/assets/icons/voice.png"/>
+      <image class="quick-icon" src="/assets/icons/voice-v2.png"/>
       <view class="quick-label">语音记账</view>
     </view>
   </view>
