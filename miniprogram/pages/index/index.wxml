@@ -107,9 +107,9 @@
 
   <!-- 记账入口 -->
   <view class="quick-entry card">
-    <view class="quick-main" bindtap="add">
+    <view class="quick-item quick-main" bindtap="add">
       <view class="quick-plus">＋</view>
-      <view>记一笔</view>
+      <view class="quick-label">记一笔</view>
     </view>
 
     <view
