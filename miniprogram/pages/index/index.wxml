@@ -124,9 +124,9 @@
       </view>
 
       <view class="period-tabs">
-        <view class="period-tab">周</view>
-        <view class="period-tab active">月</view>
-        <view class="period-tab">年</view>
+        <view class="period-tab" bindtap="selectPeriod">周</view>
+        <view class="period-tab active" bindtap="selectPeriod">月</view>
+        <view class="period-tab" bindtap="selectPeriod">年</view>
       </view>
     </view>
 
