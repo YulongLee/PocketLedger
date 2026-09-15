@@ -298,42 +298,5 @@
   <!-- 给 TabBar 留空间 -->
   <view class="bottom-space"></view>
 
-  <!-- 自定义 TabBar -->
-  <view class="tabbar">
-    <view class="tab active">
-      <view class="tab-icon">⌂</view>
-      <view>首页</view>
-    </view>
-
-    <view
-      class="tab"
-      bindtap="viewAll"
-    >
-      <view class="tab-icon">▤</view>
-      <view>账单</view>
-    </view>
-
-    <view
-      class="fab"
-      bindtap="add"
-    >
-      ＋
-    </view>
-
-    <view
-      class="tab"
-      bindtap="goStats"
-    >
-      <view class="tab-icon">▥</view>
-      <view>统计</view>
-    </view>
-
-    <view
-      class="tab"
-      bindtap="goMe"
-    >
-      <view class="tab-icon">♙</view>
-      <view>我的</view>
-    </view>
-  </view>
+  <view class="bottom-space"></view>
 </view>
