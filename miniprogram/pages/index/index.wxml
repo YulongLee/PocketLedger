@@ -206,7 +206,11 @@
           class="category-icon"
           style="background: {{item.bg}};"
         >
-          {{item.icon}}
+          <image
+            class="category-icon-image"
+            src="/assets/icons/{{item.asset}}.png"
+            mode="aspectFit"
+          />
         </view>
 
         <view class="category-name">
