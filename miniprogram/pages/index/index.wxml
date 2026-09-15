@@ -34,12 +34,11 @@
   </view>
 
   <!-- 本月收支 -->
+  <view wx:if="{{error}}" class="error-banner"><text>{{error}}</text><button bindtap="retry">重试</button></view>
   <view class="card summary-card">
     <view class="section-header">
       <view class="section-title">本月收支</view>
-      <view class="month-selector">
-        {{currentMonth}}⌄
-      </view>
+      <view class="month-selector" bindtap="selectPeriod">{{currentMonth}}⌄</view>
     </view>
 
     <view class="summary-grid">
@@ -79,7 +78,7 @@
     </view>
 
     <!-- 月度预算 -->
-    <view class="budget-row">
+    <view class="budget-row" bindtap="chooseBudget">
       <image class="budget-icon" src="/assets/icons/budget-v2.png"/>
 
       <view class="budget-content">
@@ -105,6 +104,14 @@
     </view>
   </view>
 
+  <view class="card quick-entry">
+    <view class="quick-main" bindtap="add"><text class="quick-plus">＋</text><text>记一笔</text></view>
+    <view class="quick-item" bindtap="add"><image class="quick-icon" src="/assets/icons/quick-add-v2.png"></image><text class="quick-label">快速记账</text></view>
+    <view class="quick-item" bindtap="openAI"><image class="quick-icon" src="/assets/icons/ai-v2.png"></image><text class="quick-label">AI记账</text></view>
+    <view class="quick-item" bindtap="openPhoto"><image class="quick-icon" src="/assets/icons/camera-v2.png"></image><text class="quick-label">拍照记账</text></view>
+    <view class="quick-item" bindtap="openVoice"><image class="quick-icon" src="/assets/icons/voice-v2.png"></image><text class="quick-label">语音记账</text></view>
+  </view>
+
   <!-- 消费趋势 -->
   <view class="card trend-card">
     <view class="section-header">
@@ -112,8 +119,7 @@
         <view class="section-title">本月消费趋势</view>
 
         <view class="trend-change">
-          <text class="decrease">↓ 12%</text>
-          <text class="muted"> 较上月</text>
+          <text class="decrease">{{summary.expenseChange}}</text>
         </view>
       </view>
 
@@ -156,7 +162,7 @@
       <view class="arrow">›</view>
     </view>
 
-    <view class="category-grid">
+    <view wx:if="{{categories.length}}" class="category-grid">
       <view
         wx:for="{{categories}}"
         wx:key="name"
@@ -185,7 +191,7 @@
           {{item.percent}}%
         </view>
       </view>
-    </view>
+    </view><view wx:else class="empty">本月还没有支出记录</view>
   </view>
 
   <!-- 最近账单 -->
@@ -201,13 +207,8 @@
       </view>
     </view>
 
-    <view
-      wx:for="{{recentTransactions}}"
-      wx:key="id"
-      class="transaction"
-      bindtap="openTx"
-      data-id="{{item.id}}"
-    >
+    <view wx:if="{{recentTransactions.length}}">
+      <view wx:for="{{recentTransactions}}" wx:key="id" class="transaction" bindtap="openTx" data-id="{{item.id}}">
       <view
         class="transaction-icon"
         style="background: {{item.bg}};"
@@ -231,11 +232,12 @@
         {{item.type === 'income' ? '+' : '-'}}
         ¥ {{item.amount}}
       </view>
-    </view>
+      </view>
+    </view><view wx:else class="empty">还没有账单，点击「记一笔」开始记录</view>
   </view>
 
   <!-- AI 洞察 -->
-  <view
+  <view wx:if="{{!empty}}"
     class="ai-card"
     bindtap="openAI"
   >
