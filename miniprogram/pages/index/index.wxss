@@ -7,3 +7,5 @@ page{background:#f7f9f8;color:#111827;font-family:-apple-system,BlinkMacSystemFo
 /* custom navigation and hero cutout */
 .hero{padding-top:calc(env(safe-area-inset-top) + 18rpx)}
 .mascot{width:220rpx;height:220rpx;right:0;bottom:-2rpx;border-radius:0}
+/* simulator safe-area correction */
+.hero{padding-top:72rpx}
