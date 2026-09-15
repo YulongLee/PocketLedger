@@ -1,7 +1,7 @@
 <view class="page">
   <view wx:if="{{mode === 'list'}}" class="list-view">
     <view class="ledger-head"><text class="title">账单</text><view class="head-actions"><text bindtap="focusSearch">⌕</text><text>•••</text></view></view>
-    <view class="ledger-tools"><view class="month-pill">{{monthLabel}}⌄</view><view class="view-switch"><text>列表</text><text class="active">日历</text></view></view>
+    <view class="ledger-tools"><view class="month-pill">{{monthLabel}}⌄</view></view>
     <view class="calendar"><view wx:for="{{weekLabels}}" wx:key="*this" class="week-label">{{item}}</view><view wx:for="{{calendar}}" wx:key="key" class="day {{item.selected?'selected':''}}" data-day="{{item.day}}" bindtap="selectDay"><text>{{item.day}}</text><view wx:if="{{item.dot}}" class="day-dot"></view></view></view>
     <view class="day-summary"><view class="day-summary-head"><text>{{selectedDateLabel}}</text><text class="summary-more">›</text></view><view class="day-summary-grid"><view><text>支出</text><text class="summary-number">¥ {{dayExpense}}</text></view><view class="summary-line"></view><view><text>收入</text><text class="summary-number">¥ {{dayIncome}}</text></view></view></view>
   </view>
