@@ -7,3 +7,5 @@ __pycache__/
 .DS_Store
 
 .codex/
+.venv-local/
+backend/pocketledger.local.db
