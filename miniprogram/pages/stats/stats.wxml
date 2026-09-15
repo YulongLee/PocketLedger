@@ -1,1 +1,84 @@
-<view class="page"><view class="switch"><text>周</text><text class="on">月</text><text>年</text><text>自定义</text></view><view class="period">2026年9月⌄</view><view class="card"><view class="total">¥ {{expense}}</view><text class="muted">本月支出</text><view class="donut"><view class="donut-text">支出<text>¥{{expense}}</text></view></view><view class="legend"><text wx:for="{{items}}" wx:key="name">{{item.icon}} {{item.name}} {{item.percent}}%</text></view></view><view class="card"><text class="title">支出趋势</text><view class="bars"><view wx:for="{{bars}}" wx:key="*this" style="height:{{item}}%"></view></view></view></view>
+<template name="ring">
+  <view class="ring-wrap">
+    <canvas wx:if="{{!hidden}}" id="{{canvasId}}" canvas-id="{{canvasId}}" class="ring-canvas" />
+    <view class="ring-center"><text class="ring-value">¥ {{value}}</text><text class="ring-caption">{{label}}</text></view>
+  </view>
+</template>
+<view class="stats-page">
+  <view class="navigation" style="padding-top:{{navTop}}px;height:{{navHeight}}px;">
+    <view wx:if="{{view !== 'overview'}}" class="back" bindtap="back" aria-label="返回统计总览"><view class="back-chevron" /></view>
+    <text class="nav-title">{{view === 'overview' ? '统计' : analysisLabel}}</text>
+  </view>
+  <view class="stats-content">
+    <view wx:if="{{view === 'overview'}}" class="period-tabs">
+      <view class="period-tab {{kind === 'month' ? 'active' : ''}}" data-kind="month" bindtap="chooseKind">月</view>
+      <view class="period-tab {{kind === 'year' ? 'active' : ''}}" data-kind="year" bindtap="chooseKind">年</view>
+      <view class="period-tab {{kind === 'custom' ? 'active' : ''}}" data-kind="custom" bindtap="chooseKind">自定义</view>
+    </view>
+    <view wx:else class="analysis-tabs">
+      <view class="{{view === 'expense' ? 'active' : ''}}" data-view="expense" bindtap="openAnalysis">支出</view>
+      <view class="{{view === 'income' ? 'active' : ''}}" data-view="income" bindtap="openAnalysis">收入</view>
+      <view class="{{view === 'balance' ? 'active' : ''}}" data-view="balance" bindtap="openAnalysis">结余</view>
+    </view>
+    <view class="period-trigger" bindtap="openTime"><text>{{periodLabel || '选择时间'}}</text><view class="down-chevron" /></view>
+    <view wx:if="{{loading}}" class="status-card">正在整理你的账单…</view>
+    <view wx:elif="{{error}}" class="status-card"><text>{{error}}</text><button bindtap="load" class="retry">重新加载</button><button bindtap="showPreview" class="preview-button">查看示例效果</button></view>
+    <block wx:else>
+      <view wx:if="{{preview}}" class="preview-notice"><text>示例账本 · 仅用于查看效果</text><text bindtap="load">退出示例</text></view><text class="period-note">{{periodNote}}</text>
+      <block wx:if="{{view === 'overview'}}">
+        <view class="summary-card">
+          <view class="summary-part" data-view="expense" bindtap="openAnalysis"><text class="sub-label">支出</text><text class="summary-value">¥ {{expense}}</text><text class="change expense">{{expenseChange}}</text></view>
+          <view class="summary-part" data-view="income" bindtap="openAnalysis"><text class="sub-label">收入</text><text class="summary-value">¥ {{income}}</text><text class="change">{{incomeChange}}</text></view>
+        </view>
+        <view class="balance-banner" data-view="balance" bindtap="openAnalysis">
+          <view class="balance-copy"><text class="banner-label">{{totalLabel}}结余 <text class="inline-arrow">›</text></text><text class="banner-value">¥ {{balance}}</text><text class="banner-note">{{balanceChange}}</text><text class="banner-motto">记好每一笔，生活更有底气</text></view>
+          <view class="banner-circle" /><image src="/assets/mascot-hero.png" class="banner-mascot" mode="aspectFit" />
+        </view>
+      </block>
+      <block wx:if="{{view === 'expense' || view === 'income'}}">
+        <view class="card analysis-distribution">
+          <view class="analysis-total">¥ {{activeAmount}}</view><view class="analysis-change">{{activeChange}}</view>
+          <template is="ring" data="{{canvasId: 'analysisDonut', hidden: sheet, value: activeAmount, label: totalLabel + (view === 'income' ? '收入' : '支出')}}" />
+          <view wx:if="{{!categories.length}}" class="empty-hint">这一周期暂无{{view === 'income' ? '收入' : '支出'}}记录</view>
+          <view wx:for="{{categories}}" wx:key="name" class="category-row" data-name="{{item.name}}" bindtap="openCategory">
+            <view class="category-name"><view class="dot" style="background:{{item.color}}"/><text>{{item.name}}</text></view><text class="category-amount">¥ {{item.amount}}</text><text class="category-percent">{{item.percent}}%</text><text class="row-arrow">›</text>
+          </view>
+          <text wx:if="{{categories.length}}" class="tap-hint">点击分类，查看每一笔明细</text>
+        </view>
+      </block>
+      <block wx:if="{{view === 'balance'}}">
+        <view class="balance-detail card">
+          <text class="sub-label">{{totalLabel}}结余</text><text class="balance-total">¥ {{balance}}</text><text class="analysis-change">{{balanceChange}}</text>
+          <image src="/assets/mascot-hero.png" class="balance-mascot" mode="aspectFit" />
+          <view class="rate-label">本期结余率 <text>{{rate}}</text></view><view class="rate-track"><view style="width:{{rateWidth}}%" /></view><text class="rate-note">结余 ÷ 收入；无收入时不计算结余率</text>
+        </view>
+        <view class="card"><view class="card-head"><text class="section-title">月度对比</text><text class="small-note">截至所选周期末的近6个月</text></view><view class="chart-legend"><view class="legend-entry"><view class="dot" style="background:#ff7181"/><text>支出</text></view><view class="legend-entry"><view class="dot" style="background:#20c888"/><text>收入</text></view><view class="legend-entry"><view class="dot" style="background:#9b92f6"/><text>结余</text></view></view><canvas wx:if="{{!sheet}}" id="compareCanvas" canvas-id="compareCanvas" class="trend-canvas" /></view>
+        <view class="card"><view class="card-head"><text class="section-title">月度结余列表</text><text class="small-note">结余率</text></view><view wx:for="{{comparisonList}}" wx:key="key" class="month-row"><text>{{item.fullLabel}}</text><text class="month-value">¥ {{item.amount}}</text><text class="small-note">{{item.rate}}</text></view></view>
+      </block>
+      <view wx:if="{{view !== 'balance'}}" class="card trend-card">
+        <view class="card-head"><text class="section-title">{{view === 'overview' ? '收支趋势' : view === 'income' ? '收入趋势' : '分类趋势'}}</text><view class="chart-toggle"><text class="{{chartType === 'bar' ? 'active' : ''}}" data-type="bar" bindtap="toggleChart">柱状</text><text class="{{chartType === 'line' ? 'active' : ''}}" data-type="line" bindtap="toggleChart">折线</text></view></view>
+        <view wx:if="{{view === 'expense'}}" class="category-metric"><view class="chart-toggle"><text class="{{categoryMetric === 'amount' ? 'active' : ''}}" data-metric="amount" bindtap="toggleMetric">支出金额</text><text class="{{categoryMetric === 'percent' ? 'active' : ''}}" data-metric="percent" bindtap="toggleMetric">占比</text></view></view>
+        <view wx:if="{{view === 'expense'}}" class="chart-legend category-chart-legend"><view wx:for="{{expenses}}" wx:key="name" class="legend-entry"><view class="dot" style="background:{{item.color}}"/><text>{{item.name}}</text></view></view>
+        <view wx:else class="chart-legend"><view class="legend-entry"><view class="dot" style="background:#19c58a"/><text>{{view === 'income' ? '收入' : '支出'}}</text></view><view wx:if="{{view === 'overview'}}" class="legend-entry"><view class="dot" style="background:#c7cedc"/><text>收入</text></view><text class="unit">单位：元</text></view>
+        <canvas wx:if="{{!sheet}}" id="trendCanvas" canvas-id="trendCanvas" class="trend-canvas" bindtap="tapChart" />
+        <text class="chart-tip">{{selectedPoint || (count ? '点击图表，查看对应日期金额' : '暂无流水，记账后会显示趋势')}}</text>
+      </view>
+      <view wx:if="{{view === 'overview'}}" class="card overview-distribution">
+        <view class="card-head"><text class="section-title">支出分类</text><text class="more" data-view="expense" bindtap="openAnalysis">查看更多 ›</text></view>
+        <view class="distribution-content"><template is="ring" data="{{canvasId: 'overviewDonut', hidden: sheet, value: expense, label: totalLabel + '支出'}}"/><view class="compact-legend"><view wx:for="{{expenses}}" wx:key="name" data-name="{{item.name}}" bindtap="openCategory"><view class="dot" style="background:{{item.color}}"/><text class="compact-name">{{item.name}}</text><text>{{item.percent}}%</text></view><text wx:if="{{!expenses.length}}" class="empty-hint">暂无分类支出</text></view></view>
+      </view>
+      <view class="card insights"><view class="insight-head"><image src="/assets/mascot-avatar.png" mode="aspectFit"/><text class="section-title">小账同学发现</text></view><view wx:for="{{insights}}" wx:key="*this" class="insight-row"><view class="insight-bullet"/><text>{{item}}</text></view><text class="insight-footnote">{{preview ? "根据示例账单演示" : "根据真实账单汇总"}}</text></view>
+    </block>
+  </view>
+</view>
+<view wx:if="{{sheet}}" class="sheet-mask" bindtap="closeSheet" catchtouchmove="stop">
+  <view class="sheet" catchtap="stop"><view class="sheet-handle"/><view class="sheet-head"><text>{{sheet === 'time' ? '时间筛选' : detailName}}</text><view class="sheet-close" bindtap="closeSheet" aria-label="关闭">×</view></view>
+    <block wx:if="{{sheet === 'time'}}">
+      <view class="analysis-tabs"><view class="{{draftKind === 'month' ? 'active' : ''}}" data-kind="month" bindtap="draftKindChange">月</view><view class="{{draftKind === 'year' ? 'active' : ''}}" data-kind="year" bindtap="draftKindChange">年</view><view class="{{draftKind === 'custom' ? 'active' : ''}}" data-kind="custom" bindtap="draftKindChange">自定义</view></view>
+      <block wx:if="{{draftKind !== 'custom'}}"><view class="year-picker"><view data-step="-1" bindtap="changeYear">‹</view><text>{{draftYear}}年</text><view data-step="1" bindtap="changeYear">›</view></view><view wx:if="{{draftKind === 'month'}}" class="month-grid"><view wx:for="{{months}}" wx:key="*this" class="{{draftMonth === item ? 'active' : ''}}" data-month="{{item}}" bindtap="selectMonth">{{item}}月</view></view></block>
+      <view wx:else class="date-inputs"><picker mode="date" value="{{draftStart}}" data-field="draftStart" bindchange="changeDate"><text>开始日期</text><text>{{draftStart}} ›</text></picker><picker mode="date" value="{{draftEnd}}" data-field="draftEnd" bindchange="changeDate"><text>结束日期</text><text>{{draftEnd}} ›</text></picker></view>
+      <button class="confirm" bindtap="applyTime">查看统计</button>
+    </block>
+    <block wx:else><view class="category-summary"><text>¥ {{detailAmount}}</text><text>占比 {{detailPercent}}%</text></view><scroll-view scroll-y class="detail-scroll"><view wx:for="{{detailRows}}" wx:key="id" class="detail-row"><view><text class="detail-title">{{item.title}}</text><text class="detail-date">{{item.date}} {{item.note}}</text></view><text class="detail-money">¥ {{item.amount}}</text></view></scroll-view></block>
+  </view>
+</view>
