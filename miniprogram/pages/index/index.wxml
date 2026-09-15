@@ -8,8 +8,8 @@
       </view>
 
       <view class="hero-actions">
-        <view class="round-btn">⌕</view>
-        <view class="round-btn notification">
+        <view class="round-btn" bindtap="search">⌕</view>
+        <view class="round-btn notification" bindtap="notify">
           ♧
           <view class="notification-dot"></view>
         </view>
@@ -27,7 +27,7 @@
 
       <image
         class="mascot"
-        src="/assets/mascot-avatar.png"
+        src="/assets/mascot-hero.png"
         mode="aspectFit"
       />
     </view>
@@ -277,7 +277,7 @@
   >
     <image
       class="ai-avatar"
-      src="/assets/mascot-avatar.png"
+      src="/assets/mascot-hero.png"
       mode="aspectFit"
     />
 
