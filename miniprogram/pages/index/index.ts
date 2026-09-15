@@ -7,17 +7,14 @@ Page({
   onShow() { this.load(); this.loadProfile() },
   async loadProfile() { try { const profile: any = await api.profile(); const name = String(profile.nickname || profile.name || '李'); this.setData({ userName: name.slice(0, 8) }) } catch (_e) {} },
   async load() {
-    const now = new Date(), month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`, range = periodRange('month', now.getFullYear(), now.getMonth() + 1, { start: '', end: '' }), previous = previousRange('month', range)
+    const now = new Date(), month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     this.setData({ loading: true, error: '', currentMonth: `${now.getFullYear()}年${now.getMonth() + 1}月` })
     try {
-      const [currentRes, previousRes, budgetRes]: any[] = await Promise.all([api.transactions({ month }), api.transactions({ month: previous.start.slice(0, 7) }), api.budgets({ month })])
-      const current = normalizeEntries(currentRes.items || []), previousRows = normalizeEntries(previousRes.items || []), sum = totals(current), prev = totals(previousRows)
-      const cats = categoryRows(current, 'expense').slice(0, 5).map(c => ({ ...c, asset: iconMap[c.name] || 'other-v2', bg: colorMap[c.name] || '#f2eaff' }))
-      const points = timeline(current, range, 'month')
-      const recent = [...current].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(r => ({ id: r.id, title: r.title, amount: money(r.cents), type: r.type, time: r.date, account: '账本账户', icon: r.type === 'income' ? '¥' : '', bg: r.type === 'income' ? '#e6faef' : '#fff0df' }))
-      const budgetTotal = (budgetRes.items || []).filter((x: any) => !x.category_id).reduce((n: number, x: any) => n + Number(x.amount || 0), 0) || 3000
-      const used = sum.expense / 100, percent = Math.max(0, Math.min(100, Math.round(used / budgetTotal * 100)))
-      this.setData({ loading: false, error: '', empty: !current.length, summary: { expense: money(sum.expense), income: money(sum.income), balance: money(sum.balance), expenseChange: change(sum.expense, prev.expense), incomeChange: change(sum.income, prev.income), balanceRate: sum.income ? `${Math.round(sum.balance / sum.income * 100)}%` : '—' }, budget: { total: budgetTotal.toFixed(2), percent, used: used.toFixed(2) }, categories: cats, recentTransactions: recent, trend: points.map((p, i) => ({ date: p.label, height: sum.expense ? Math.max(8, Math.round(p.expense / sum.expense * 120)) : 8, selected: i === points.length - 1 })) })
+      const home: any = await api.home({ month })
+      const summary = home.summary || {}, budget = home.budget || {}, maxTrend = Math.max(1, ...(home.trend || []).map((p: any) => Number(p.expense || 0)))
+      const cats = (home.categories || []).map((c: any) => ({ ...c, asset: iconMap[c.name] || 'other-v2', bg: colorMap[c.name] || '#f2eaff', amount: Number(c.amount || 0).toFixed(2) }))
+      const recent = (home.recent || []).map((r: any) => ({ ...r, amount: Number(r.amount || 0).toFixed(2), time: String(r.occurred_at || '').slice(0, 16).replace('T', ' '), account: '账本账户', icon: r.type === 'income' ? '¥' : '', bg: r.type === 'income' ? '#e6faef' : '#fff0df' }))
+      this.setData({ loading: false, error: '', empty: !(home.recent || []).length, summary: { expense: Number(summary.expense || 0).toFixed(2), income: Number(summary.income || 0).toFixed(2), balance: Number(summary.balance || 0).toFixed(2), expenseChange: summary.expense_change || '暂无变化', incomeChange: summary.income_change || '暂无变化', balanceRate: Number(summary.income || 0) ? `${Math.round(Number(summary.balance || 0) / Number(summary.income) * 100)}%` : '—' }, budget: { total: Number(budget.total || 0).toFixed(2), percent: Number(budget.percent || 0), used: Number(budget.used || 0).toFixed(2) }, categories: cats, recentTransactions: recent, trend: (home.trend || []).map((p: any, i: number) => ({ date: p.date, height: Number(p.expense || 0) ? Math.max(8, Math.round(Number(p.expense) / maxTrend * 120)) : 8, selected: i === home.trend.length - 1 })) })
     } catch (_e) { this.setData({ loading: false, error: '账单暂时未能加载，请重试。', empty: true, recentTransactions: [], categories: [], trend: [] }) }
   },
   retry() { this.load() },

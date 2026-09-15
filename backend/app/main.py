@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from typing import Literal
 from uuid import uuid4
@@ -168,6 +168,48 @@ def delete_transaction(tx_id:str, authorization: str|None = Header(None)):
         r=s.scalar(select(TransactionRow).where(TransactionRow.id==tx_id,TransactionRow.user_id==current_user(authorization)))
         if not r: raise HTTPException(404,'transaction not found')
         s.delete(r); s.commit(); return {'ok':True}
+@app.get('/api/v1/home')
+def home(ledger_id: str = 'default', month: str | None = None, authorization: str | None = Header(None)):
+    """Return the complete deterministic dashboard model for one calendar month."""
+    uid = current_user(authorization)
+    selected = month or datetime.now().strftime('%Y-%m')
+    try:
+        year, month_number = (int(x) for x in selected.split('-'))
+        start = date(year, month_number, 1)
+    except (ValueError, TypeError):
+        raise HTTPException(400, 'month must be YYYY-MM')
+    next_start = date(year + (month_number == 12), 1 if month_number == 12 else month_number + 1, 1)
+    previous_start = date(year - (month_number == 1), 12 if month_number == 1 else month_number - 1, 1)
+    with Session(engine) as session:
+        rows = list(session.scalars(select(TransactionRow).where(TransactionRow.user_id == uid, TransactionRow.ledger_id == ledger_id)))
+        budgets = list(session.scalars(select(BudgetRow).where(BudgetRow.user_id == uid, BudgetRow.ledger_id == ledger_id, BudgetRow.month == selected)))
+    def in_range(row, begin, end):
+        return begin <= row.occurred_at.date() < end
+    current = [r for r in rows if in_range(r, start, next_start)]
+    previous = [r for r in rows if in_range(r, previous_start, start)]
+    def total(items, kind): return sum((Decimal(r.amount) for r in items if r.type == kind), Decimal('0.00'))
+    expense, income = total(current, 'expense'), total(current, 'income')
+    previous_expense, previous_income = total(previous, 'expense'), total(previous, 'income')
+    categories = {}
+    for row in current:
+        if row.type == 'expense':
+            key = row.category_id or '其他'
+            categories[key] = categories.get(key, Decimal('0.00')) + Decimal(row.amount)
+    category_items = sorted(categories.items(), key=lambda item: item[1], reverse=True)
+    budget_total = sum((Decimal(b.amount) for b in budgets if b.category_id is None), Decimal('0.00'))
+    if budget_total == 0: budget_total = Decimal('3000.00')
+    days = (next_start - start).days
+    trend = []
+    for offset in range(days):
+        day = start + timedelta(days=offset)
+        values = [r for r in current if r.occurred_at.date() == day]
+        trend.append({'date': day.isoformat(), 'expense': str(total(values, 'expense')), 'income': str(total(values, 'income'))})
+    recent = sorted(current, key=lambda r: r.occurred_at, reverse=True)[:5]
+    def percent(current_value, previous_value):
+        if previous_value == 0: return None if current_value == 0 else '上期无记录'
+        return f"{((current_value - previous_value) / abs(previous_value) * 100):.0f}%"
+    return {'month': selected, 'summary': {'expense': str(expense), 'income': str(income), 'balance': str(income - expense), 'expense_change': percent(expense, previous_expense), 'income_change': percent(income, previous_income)}, 'budget': {'total': str(budget_total), 'used': str(expense), 'percent': min(100, round(float(expense / budget_total * 100))) if budget_total else 0}, 'categories': [{'name': name, 'amount': str(amount), 'percent': round(float(amount / expense * 100), 1) if expense else 0} for name, amount in category_items[:5]], 'trend': trend, 'recent': [tx_dict(row) for row in recent]}
+
 @app.get('/api/v1/statistics')
 def statistics(ledger_id='default',month:str|None=None, authorization: str|None = Header(None)):
     items=list_transactions(ledger_id,month,authorization=authorization)['items']; expense=sum(Decimal(x['amount']) for x in items if x['type']=='expense'); income=sum(Decimal(x['amount']) for x in items if x['type']=='income'); return {'expense':str(expense),'income':str(income),'balance':str(income-expense),'count':len(items)}
